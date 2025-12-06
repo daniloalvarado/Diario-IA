@@ -27,7 +27,7 @@ export default function AIChatScreen() {
   // 1. DEFINIR LA URL MANUALMENTE PARA EVITAR EL CRASH
   // Si tienes tu web en Vercel, pon esa URL aquí (ej: "https://mi-diario.vercel.app")
   // Si no, dejamos una genérica para que la app no explote.
-  const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_ORIGIN || "https://diario-ia.vercel.app";
+  const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_ORIGIN || "https://diario-ia-backend.onrender.com";
 
   const { messages, error, sendMessage } = useChat({
     transport: new DefaultChatTransport({
