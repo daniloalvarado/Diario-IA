@@ -3,42 +3,52 @@ import cors from 'cors';
 import { groq } from '@ai-sdk/groq';
 import { streamText, convertToModelMessages } from 'ai';
 import * as dotenv from 'dotenv';
+import { Readable } from 'node:stream'; // <--- IMPORTANTE: Agregamos esto
 
-// Cargar variables de entorno
 dotenv.config();
 
 const app = express();
-// Permitir que cualquiera (tu app) se conecte
 app.use(cors());
-// Permitir recibir JSON
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
-// Ruta de prueba para ver si el servidor vive
 app.get('/', (req, res) => {
-  res.send('¡El cerebro de Diario IA está vivo! 🧠');
+  res.send('Servidor Diario IA funcionando correctamente 🚀');
 });
 
-// LA RUTA DEL CHAT
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
 
-    // Configurar la respuesta de la IA
+    // Configuración de la IA
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
       system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español.",
       messages: convertToModelMessages(messages),
     });
 
-    // Convertir la respuesta de la IA a algo que Express entienda
-    // (Truco para que funcione el stream con Express)
-    result.pipeDataStreamToResponse(res);
+    // --- CORRECCIÓN DEL ERROR ---
+    // En lugar de usar pipeDataStreamToResponse (que falla),
+    // convertimos el flujo manualmente a algo que Express entienda.
+    
+    // 1. Configuramos las cabeceras para streaming
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'X-Vercel-AI-Data-Stream': 'v1'
+    });
+
+    // 2. Convertimos el stream web a stream de Node y lo enviamos
+    const stream = result.toDataStream();
+    Readable.fromWeb(stream).pipe(res);
 
   } catch (error) {
-    console.error('Error en el chat:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error en el servidor:', error);
+    // Solo enviamos error si las cabeceras no se han enviado ya
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
 });
 
