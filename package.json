@@ -2,11 +2,10 @@
   "name": "sanity-clerk-billing-journal-app-expo",
   "main": "server.js",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "build": "expo export -p web",
     "start": "expo start",
-    "start-server": "node server.js",
+    "start-server": "node server.mjs",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
