@@ -3,7 +3,6 @@ import cors from 'cors';
 import { groq } from '@ai-sdk/groq';
 import { streamText, convertToModelMessages } from 'ai';
 import * as dotenv from 'dotenv';
-import { Readable } from 'node:stream'; // <--- IMPORTANTE: Agregamos esto
 
 dotenv.config();
 
@@ -14,38 +13,39 @@ app.use(express.json());
 const PORT = process.env.PORT || 10000;
 
 app.get('/', (req, res) => {
-  res.send('Servidor Diario IA funcionando correctamente 🚀');
+  res.send('Servidor Diario IA funcionando 🚀');
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
 
-    // Configuración de la IA
+    console.log("Recibiendo mensaje para IA...");
+
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
       system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español.",
       messages: convertToModelMessages(messages),
     });
 
-    // --- CORRECCIÓN DEL ERROR ---
-    // En lugar de usar pipeDataStreamToResponse (que falla),
-    // convertimos el flujo manualmente a algo que Express entienda.
-    
-    // 1. Configuramos las cabeceras para streaming
+    // --- MODO MANUAL (A PRUEBA DE ERRORES) ---
+    // Configuramos las cabeceras necesarias
     res.writeHead(200, {
       'Content-Type': 'text/plain; charset=utf-8',
       'Transfer-Encoding': 'chunked',
       'X-Vercel-AI-Data-Stream': 'v1'
     });
 
-    // 2. Convertimos el stream web a stream de Node y lo enviamos
-    const stream = result.toDataStream();
-    Readable.fromWeb(stream).pipe(res);
+    // Iteramos el flujo de texto manualmente y lo enviamos
+    // en el formato que la App espera (0:"texto")
+    for await (const chunk of result.textStream) {
+      res.write(`0:${JSON.stringify(chunk)}\n`);
+    }
+
+    res.end();
 
   } catch (error) {
-    console.error('Error en el servidor:', error);
-    // Solo enviamos error si las cabeceras no se han enviado ya
+    console.error('Error en el chat:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Error interno del servidor' });
     }
