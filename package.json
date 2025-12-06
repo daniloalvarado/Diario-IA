@@ -1,6 +1,6 @@
 {
   "name": "sanity-clerk-billing-journal-app-expo",
-  "main": "server.js",
+  "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
     "build": "expo export -p web",
