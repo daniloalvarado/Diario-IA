@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
-    console.log("--> Solicitud recibida en /api/chat");
+    console.log("--> Solicitud recibida. Procesando con Groq...");
 
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
@@ -27,30 +27,25 @@ app.post('/api/chat', async (req, res) => {
       messages: convertToModelMessages(messages),
     });
 
-    // --- SOLUCIÓN DE COMPATIBILIDAD ---
-    // 1. Generamos la respuesta estándar de Vercel AI
-    const aiResponse = result.toDataStreamResponse();
-
-    // 2. Copiamos las cabeceras correctas (esto arregla el formato)
-    aiResponse.headers.forEach((value, key) => {
-      res.setHeader(key, value);
+    // --- MODO MANUAL INDESTRUCTIBLE ---
+    // 1. Configuramos las cabeceras exactas que espera Expo/Vercel AI
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'X-Vercel-AI-Data-Stream': 'v1'
     });
 
-    // 3. Enviamos el stream directamente (sin tocarlo nosotros)
-    const reader = aiResponse.body.getReader();
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      // 'value' ya viene en el formato correcto (Uint8Array)
-      res.write(value);
+    // 2. Iteramos el texto generado y lo enviamos con el formato "0:texto"
+    // Este formato es el protocolo oficial que usa tu App para entender el stream.
+    for await (const textPart of result.textStream) {
+      res.write(`0:${JSON.stringify(textPart)}\n`);
     }
 
     res.end();
-    console.log("--> Respuesta enviada exitosamente");
+    console.log("--> Respuesta enviada correctamente.");
 
   } catch (error) {
-    console.error('ERROR CRÍTICO:', error);
+    console.error('ERROR EN EL PROCESO:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Error interno: ' + error.message });
     }
