@@ -19,35 +19,45 @@ app.get('/', (req, res) => {
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
+    console.log("1. Recibiendo mensaje del usuario...");
 
-    console.log("Recibiendo mensaje para IA...");
+    // Verificación rápida de la llave (solo para ver si existe, no la imprime completa por seguridad)
+    if (!process.env.GROQ_API_KEY) {
+        console.error("ERROR CRÍTICO: No se encontró GROQ_API_KEY en las variables de entorno.");
+        return res.status(500).json({ error: "Falta API Key en el servidor" });
+    }
+    console.log(`2. API Key detectada (Longitud: ${process.env.GROQ_API_KEY.length})`);
 
+    console.log("3. Iniciando solicitud a Groq...");
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
       system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español.",
       messages: convertToModelMessages(messages),
     });
 
-    // --- MODO MANUAL (A PRUEBA DE ERRORES) ---
-    // Configuramos las cabeceras necesarias
+    console.log("4. Configurando cabeceras de respuesta...");
     res.writeHead(200, {
       'Content-Type': 'text/plain; charset=utf-8',
       'Transfer-Encoding': 'chunked',
       'X-Vercel-AI-Data-Stream': 'v1'
     });
 
-    // Iteramos el flujo de texto manualmente y lo enviamos
-    // en el formato que la App espera (0:"texto")
+    console.log("5. Entrando al bucle de stream...");
+    let chunkCount = 0;
+    
     for await (const chunk of result.textStream) {
+      if (chunkCount === 0) console.log("6. ¡PRIMER DATO RECIBIDO DE LA IA!"); // Si ves esto, funciona
       res.write(`0:${JSON.stringify(chunk)}\n`);
+      chunkCount++;
     }
 
+    console.log(`7. Stream finalizado. Se enviaron ${chunkCount} fragmentos.`);
     res.end();
 
   } catch (error) {
-    console.error('Error en el chat:', error);
+    console.error('ERROR EN EL PROCESO:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Error interno del servidor' });
+      res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
     }
   }
 });
