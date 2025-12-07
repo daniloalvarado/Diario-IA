@@ -1,8 +1,8 @@
-import express from 'express';
-import cors from 'cors';
 import { groq } from '@ai-sdk/groq';
-import { streamText, convertToModelMessages } from 'ai';
+import { convertToModelMessages, streamText } from 'ai';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
 
@@ -18,8 +18,9 @@ app.get('/', (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, userId } = req.body;
     console.log("--> Solicitud recibida. Procesando con Groq...");
+    console.log("--> userId:", userId);
 
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
@@ -27,21 +28,27 @@ app.post('/api/chat', async (req, res) => {
       messages: convertToModelMessages(messages),
     });
 
-    // --- MODO MANUAL INDESTRUCTIBLE ---
-    // 1. Configuramos las cabeceras exactas que espera Expo/Vercel AI
-    res.writeHead(200, {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-      'X-Vercel-AI-Data-Stream': 'v1'
+    // Usar el método correcto del AI SDK para streaming
+    const response = result.toDataStreamResponse();
+
+    // Copiar headers de la respuesta del SDK
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
     });
 
-    // 2. Iteramos el texto generado y lo enviamos con el formato "0:texto"
-    // Este formato es el protocolo oficial que usa tu App para entender el stream.
-    for await (const textPart of result.textStream) {
-      res.write(`0:${JSON.stringify(textPart)}\n`);
-    }
+    // Stream the body
+    const reader = response.body.getReader();
 
-    res.end();
+    const pump = async () => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+      res.end();
+    };
+
+    await pump();
     console.log("--> Respuesta enviada correctamente.");
 
   } catch (error) {

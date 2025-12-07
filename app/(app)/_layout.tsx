@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Stack } from "expo-router";
 import React from "react";
-import { Spinner, View } from "tamagui"; // Agregué View por si acaso
+import { Spinner } from "tamagui"; // Agregué View por si acaso
 
 export default function Layout() {
   const { isLoaded, isSignedIn } = useAuth();
@@ -11,10 +11,10 @@ export default function Layout() {
   }
 
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isSignedIn}>
-        {/* CORRECCIÓN: Aquí apuntamos a la carpeta (app) */}
-        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        {/* Navegación de tabs */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
         <Stack.Screen name="new-entry" options={{ headerShown: false }} />
         <Stack.Screen name="edit-entry/[id]" options={{ headerShown: false }} />
@@ -22,20 +22,20 @@ export default function Layout() {
       </Stack.Protected>
 
       <Stack.Protected guard={!isSignedIn}>
-        <Stack.Screen 
-          name="sign-in" 
-          options={{ headerShown: false }} 
+        <Stack.Screen
+          name="sign-in"
+          options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="sign-up" 
-          options={{ headerShown: false }} 
+        <Stack.Screen
+          name="sign-up"
+          options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="alert-modal" 
-          options={{ 
-            headerShown: false, 
-            presentation: "modal" 
-          }} 
+        <Stack.Screen
+          name="alert-modal"
+          options={{
+            headerShown: false,
+            presentation: "modal"
+          }}
         />
       </Stack.Protected>
     </Stack>
