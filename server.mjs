@@ -13,55 +13,50 @@ app.use(express.json());
 const PORT = process.env.PORT || 10000;
 
 app.get('/', (req, res) => {
-  res.send('Servidor Diario IA funcionando 🚀');
+  res.send('Servidor Diario IA: Activo 🟢');
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
-    console.log("1. Recibiendo mensaje del usuario...");
+    console.log("--> Solicitud recibida en /api/chat");
 
-    // Verificación rápida de la llave (solo para ver si existe, no la imprime completa por seguridad)
-    if (!process.env.GROQ_API_KEY) {
-        console.error("ERROR CRÍTICO: No se encontró GROQ_API_KEY en las variables de entorno.");
-        return res.status(500).json({ error: "Falta API Key en el servidor" });
-    }
-    console.log(`2. API Key detectada (Longitud: ${process.env.GROQ_API_KEY.length})`);
-
-    console.log("3. Iniciando solicitud a Groq...");
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
       system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español.",
       messages: convertToModelMessages(messages),
     });
 
-    console.log("4. Configurando cabeceras de respuesta...");
-    res.writeHead(200, {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-      'X-Vercel-AI-Data-Stream': 'v1'
+    // --- SOLUCIÓN DE COMPATIBILIDAD ---
+    // 1. Generamos la respuesta estándar de Vercel AI
+    const aiResponse = result.toDataStreamResponse();
+
+    // 2. Copiamos las cabeceras correctas (esto arregla el formato)
+    aiResponse.headers.forEach((value, key) => {
+      res.setHeader(key, value);
     });
 
-    console.log("5. Entrando al bucle de stream...");
-    let chunkCount = 0;
+    // 3. Enviamos el stream directamente (sin tocarlo nosotros)
+    const reader = aiResponse.body.getReader();
     
-    for await (const chunk of result.textStream) {
-      if (chunkCount === 0) console.log("6. ¡PRIMER DATO RECIBIDO DE LA IA!"); // Si ves esto, funciona
-      res.write(`0:${JSON.stringify(chunk)}\n`);
-      chunkCount++;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      // 'value' ya viene en el formato correcto (Uint8Array)
+      res.write(value);
     }
 
-    console.log(`7. Stream finalizado. Se enviaron ${chunkCount} fragmentos.`);
     res.end();
+    console.log("--> Respuesta enviada exitosamente");
 
   } catch (error) {
-    console.error('ERROR EN EL PROCESO:', error);
+    console.error('ERROR CRÍTICO:', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
+      res.status(500).json({ error: 'Error interno: ' + error.message });
     }
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`Servidor escuchando en puerto ${PORT}`);
 });
