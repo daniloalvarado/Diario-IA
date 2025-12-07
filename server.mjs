@@ -28,8 +28,13 @@ app.post('/api/chat', async (req, res) => {
       messages: convertToModelMessages(messages),
     });
 
-    // Usar el método correcto del AI SDK para streaming
-    const response = result.toDataStreamResponse();
+    // Usar toUIMessageStreamResponse que es compatible con DefaultChatTransport
+    const response = result.toUIMessageStreamResponse({
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Encoding': 'none',
+      },
+    });
 
     // Copiar headers de la respuesta del SDK
     response.headers.forEach((value, key) => {
