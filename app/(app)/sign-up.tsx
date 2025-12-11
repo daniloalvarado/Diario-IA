@@ -1,6 +1,6 @@
 import Logo from "@/components/Logo";
 import { useModal } from "@/contexts/ModalContext";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignUp, isClerkAPIResponseError } from "@clerk/clerk-expo"; // IMPORTANTE: Agregué isClerkAPIResponseError
 import { useRouter } from "expo-router";
 import * as React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -46,16 +46,27 @@ export default function SignUpScreen() {
       // Set 'pendingVerification' to true to display second form
       // and capture OTP code
       setPendingVerification(true);
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+    } catch (err: any) {
+      // --- BLOQUE DE ERROR MEJORADO ---
       console.error(JSON.stringify(err, null, 2));
+
+      let errorMessage = "Ups, ocurrió un error, ¡por favor intenta de nuevo!";
+
+      // Si el error viene de Clerk, sacamos el mensaje detallado
+      if (isClerkAPIResponseError(err)) {
+        errorMessage = err.errors[0]?.longMessage || err.errors[0]?.message || errorMessage;
+      } 
+      // Si es otro tipo de error con mensaje
+      else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
 
       showModal({
         type: "alert",
-        title: "Error", // TRADUCIDO
-        description: "Ups, ocurrió un error, ¡por favor intenta de nuevo!", // TRADUCIDO
+        title: "Atención", // Cambiado a "Atención" o "Error"
+        description: errorMessage, // Aquí mostramos "Passwords must be 8 characters..."
       });
+      // -------------------------------
     } finally {
       setIsLoading(false);
     }
@@ -82,15 +93,20 @@ export default function SignUpScreen() {
         // complete further steps.
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
-    } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
+    } catch (err: any) {
+      // También mejoramos el error aquí por si acaso
       console.error(JSON.stringify(err, null, 2));
+      
+      let errorMessage = "El código de verificación es incorrecto";
+      
+      if (isClerkAPIResponseError(err)) {
+        errorMessage = err.errors[0]?.longMessage || err.errors[0]?.message || errorMessage;
+      }
 
       showModal({
         type: "alert",
-        title: "Error", 
-        description: "Ups, ocurrió un error, ¡por favor intenta de nuevo!", 
+        title: "Error",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -115,7 +131,7 @@ export default function SignUpScreen() {
 
             <YStack gap="$2" style={{ alignItems: "center" }}>
               <H1 color="$color" style={{ textAlign: "center" }}>
-                Verifica tu correo {/* TRADUCIDO */}
+                Verifica tu correo 
               </H1>
               <Paragraph
                 color="$color"

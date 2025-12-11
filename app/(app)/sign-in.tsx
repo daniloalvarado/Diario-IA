@@ -65,7 +65,7 @@ export default function Page() {
         description:
           clerkError?.errors[0]?.longMessage ||
           clerkError?.errors[0]?.message ||
-          "Ups, ocurrió un error, ¡por favor intenta de nuevo!", // TRADUCIDO
+          "Ups, ocurrió un error, ¡por favor intenta de nuevo!", 
         onCancel: () => {
           setIsLoading(false);
         },
