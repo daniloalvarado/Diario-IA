@@ -49,7 +49,7 @@ export default {
     },
     extra: {
       eas: {
-        projectId: "6b2de7e1-3efc-48be-9523-4bb5c06e2f88"
+        projectId: "8f46ae3d-58db-4784-b288-b1dc89522411"
       }
     }
   },
