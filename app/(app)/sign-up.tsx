@@ -48,14 +48,21 @@ export default function SignUpScreen() {
       setPendingVerification(true);
     } catch (err: any) {
       // --- BLOQUE DE ERROR MEJORADO ---
-      console.error(JSON.stringify(err, null, 2));
+      console.log(JSON.stringify(err, null, 2));
 
       let errorMessage = "Ups, ocurrió un error, ¡por favor intenta de nuevo!";
 
       // Si el error viene de Clerk, sacamos el mensaje detallado
       if (isClerkAPIResponseError(err)) {
-        errorMessage = err.errors[0]?.longMessage || err.errors[0]?.message || errorMessage;
-      } 
+        const msg = err.errors[0]?.message || "";
+
+        if (msg.includes("Password")) {
+          errorMessage = "La contraseña debe tener al menos 8 caracteres.";
+        } else {
+          errorMessage = msg;
+        }
+      }
+
       // Si es otro tipo de error con mensaje
       else if (err instanceof Error) {
         errorMessage = err.message;
@@ -91,14 +98,14 @@ export default function SignUpScreen() {
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        console.log(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err: any) {
       // También mejoramos el error aquí por si acaso
-      console.error(JSON.stringify(err, null, 2));
-      
+      console.log(JSON.stringify(err, null, 2));
+
       let errorMessage = "El código de verificación es incorrecto";
-      
+
       if (isClerkAPIResponseError(err)) {
         errorMessage = err.errors[0]?.longMessage || err.errors[0]?.message || errorMessage;
       }
@@ -131,7 +138,7 @@ export default function SignUpScreen() {
 
             <YStack gap="$2" style={{ alignItems: "center" }}>
               <H1 color="$color" style={{ textAlign: "center" }}>
-                Verifica tu correo 
+                Verifica tu correo
               </H1>
               <Paragraph
                 color="$color"
@@ -145,7 +152,7 @@ export default function SignUpScreen() {
             <Card elevate padding="$4" gap="$2" backgroundColor="$background">
               <YStack gap="$2">
                 <YStack gap="$2">
-                  <Label color="$color">Código de verificación</Label> 
+                  <Label color="$color">Código de verificación</Label>
                   <Input
                     value={code}
                     placeholder="Ingresa el código"
@@ -170,7 +177,7 @@ export default function SignUpScreen() {
                   disabled={!isLoaded || isLoading}
                   opacity={!isLoaded || isLoading ? 0.5 : 1}
                 >
-                  {isLoading ? "Verificando..." : "Verificar correo"} 
+                  {isLoading ? "Verificando..." : "Verificar correo"}
                 </Button>
               </YStack>
             </Card>
@@ -180,7 +187,7 @@ export default function SignUpScreen() {
               style={{ justifyContent: "center", alignItems: "center" }}
             >
               <Paragraph color="$color" opacity={0.7}>
-                ¿No recibiste el código? 
+                ¿No recibiste el código?
               </Paragraph>
               <Button
                 variant="outlined"
@@ -211,26 +218,26 @@ export default function SignUpScreen() {
 
           <YStack gap="$2" style={{ alignItems: "center" }}>
             <H1 color="$color" style={{ textAlign: "center" }}>
-              Crear cuenta 
+              Crear cuenta
             </H1>
             <Paragraph
               color="$color"
               opacity={0.7}
               style={{ textAlign: "center" }}
             >
-              Regístrate para comenzar 
+              Regístrate para comenzar
             </Paragraph>
           </YStack>
 
           <Card elevate padding="$4" gap="$2" backgroundColor="$background">
             <YStack gap="$2">
               <YStack gap="$2">
-                <Label color="$color">Correo electrónico</Label> 
+                <Label color="$color">Correo electrónico</Label>
                 <Input
                   autoCapitalize="none"
                   keyboardType="email-address"
                   value={emailAddress}
-                  placeholder="Ingresa tu correo" 
+                  placeholder="Ingresa tu correo"
                   onChangeText={setEmailAddress}
                   borderColor="$borderColor"
                   focusStyle={{
@@ -240,11 +247,11 @@ export default function SignUpScreen() {
               </YStack>
 
               <YStack gap="$2">
-                <Label color="$color">Contraseña</Label> 
+                <Label color="$color">Contraseña</Label>
                 <Input
                   secureTextEntry
                   value={password}
-                  placeholder="Crea una contraseña" 
+                  placeholder="Crea una contraseña"
                   onChangeText={setPassword}
                   borderColor="$borderColor"
                   focusStyle={{
@@ -264,7 +271,7 @@ export default function SignUpScreen() {
                 disabled={!isLoaded || isLoading}
                 opacity={!isLoaded || isLoading ? 0.5 : 1}
               >
-                {isLoading ? "Creando cuenta..." : "Crear cuenta"} 
+                {isLoading ? "Creando cuenta..." : "Crear cuenta"}
               </Button>
             </YStack>
           </Card>
@@ -284,7 +291,7 @@ export default function SignUpScreen() {
               color="#904BFF"
               onPress={() => router.canGoBack() && router.back()}
             >
-              Iniciar sesión 
+              Iniciar sesión
             </Button>
           </XStack>
         </YStack>
