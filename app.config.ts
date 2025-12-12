@@ -1,7 +1,7 @@
 export default {
   expo: {
-    name: "sanity-clerk-billing-journal-app-expo",
-    slug: "sanity-clerk-billing-journal-app-expo",
+    name: "Diario IA",
+    slug: "diario-ia",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
