@@ -1,4 +1,4 @@
-// import { generateAPIUrl } from "@/utils"; // <--- Lo comentamos para no usar la función que fallaba
+import { generateAPIUrl } from "@/utils";
 
 interface CategorizeResponse {
   categoryId: string;
@@ -6,9 +6,6 @@ interface CategorizeResponse {
   action: "existing" | "new";
   categoryTitle: string;
 }
-
-// 👇 TU SERVIDOR DE RENDER (Sin barra al final)
-const BACKEND_URL = "https://diario-ia-backend.onrender.com";
 
 /**
  * Calls the AI categorization API to automatically categorize a journal entry
@@ -23,12 +20,7 @@ export async function categorizeJournalEntry(
   userId: string
 ): Promise<CategorizeResponse> {
   try {
-    // 👇 Construimos la URL completa aquí mismo
-    const fullUrl = `${BACKEND_URL}/api/categorize`;
-
-    console.log("🚀 Intentando conectar con Backend:", fullUrl);
-
-    const response = await fetch(fullUrl, {
+    const response = await fetch(generateAPIUrl("/api/categorize"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,16 +34,15 @@ export async function categorizeJournalEntry(
 
     if (!response.ok) {
       const errorText = await response.text();
-      // Esto nos dará detalles si el servidor responde con error (ej: 500 o 404)
       throw new Error(`Categorization failed: ${response.status} ${errorText}`);
     }
 
     const result: CategorizeResponse = await response.json();
-    console.log("✅ Categorization result:", result);
+    console.log("Categorization result:", result);
 
     return result;
   } catch (error) {
-    console.error("❌ Error calling categorization API:", error);
+    console.error("Error calling categorization API:", error);
     throw error;
   }
 }
