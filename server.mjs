@@ -150,7 +150,7 @@ app.post('/api/chat', async (req, res) => {
 
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
-      system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español.",
+      system: "Eres un asistente de diario personal empático y útil. Responde SIEMPRE en español. TUS RESPUESTAS DEBEN SER BREVES Y CONCISAS (máximo 2 o 3 oraciones). Evita dar explicaciones largas o listas innecesarias a menos que el usuario lo pida explícitamente.",
       messages: convertToModelMessages(messages),
     });
 
