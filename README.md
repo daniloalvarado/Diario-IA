@@ -1,4 +1,4 @@
 Esta aplicación móvil de diario personal te ayuda a registrar tus pensamientos y emociones de una manera intuitiva y organizada. Ofrece un chat terapéutico impulsado por IA que analiza tus entradas (notas personales) para brindarte insights personalizados y ayudarte a comprender mejor tus patrones emocionales. Además, te proporciona sugerencias diarias de escritura para inspirarte y superar el bloqueo creativo, y categoriza automáticamente tus entradas para que puedas encontrar fácilmente temas específicos en el futuro. En resumen, esta app te ayuda a reflexionar sobre tus experiencias, identificar patrones y mejorar tu bienestar mental a través de la escritura y la auto-reflexión guiada.
 <br><br>
-<img src="https://raw.githubusercontent.com/daniloalvarado/Diario_IA/main/assets/images/project-W6.png" 
+<img src="https://raw.githubusercontent.com/daniloalvarado/Diario-IA/main/assets/images/project-W6.png" 
 alt="Diario-IA">
